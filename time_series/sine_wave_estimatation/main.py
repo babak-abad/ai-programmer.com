@@ -4,70 +4,75 @@ from torch import nn
 import numpy as np
 from torch.optim import Adam
 import util as utl
+import configs as cfg
 
-win_sz = 15
-step_x = 0.1
-n_batch = 8
-n_epoch = 1000
-hid_sz = 10
-lr = 0.1
-hope = 2
-
-trn_sz = 0.6
-vld_sz = 0.1
-
-data = [step_x*x for x in range(0, int(10*np.pi/step_x))]
+data = [cfg.step_x*x for x in range(0, int(10*np.pi/cfg.step_x))]
 
 data = (np.sin(data) + 1)/2.0
-x, y = utl.slide(data, win_sz, hope)
+x, y = utl.slide(data, cfg.win_sz, cfg.hope)
 
-trn_sz = int(len(data) * trn_sz)
-vld_sz = int(len(data) * vld_sz)
+trn_sz = int(len(data) * cfg.trn_sz)
+vld_sz = int(len(data) * cfg.vld_sz)
 
 trn_data = data[0: trn_sz]
 vld_data = data[trn_sz: trn_sz+vld_sz]
 tst_data = data[trn_sz+vld_sz:]
 
-plt.plot(y)
-
 trn_dl = utl.create_dataloader(
-    *utl.slide(trn_data, win_sz, hope),
-    n_batch,
+    *utl.slide(trn_data, cfg.win_sz, cfg.hope),
+    cfg.n_batch,
     True)
 vld_dl = utl.create_dataloader(
-    *utl.slide(data, win_sz, hope),
-    n_batch,
+    *utl.slide(data, cfg.win_sz, cfg.hope),
+    cfg.n_batch,
     True)
 tst_dl = utl.create_dataloader(
-    *utl.slide(data, win_sz, hope),
-    n_batch,
+    *utl.slide(data, cfg.win_sz, cfg.hope),
+    cfg.n_batch,
     False)
 
 model = nn.Sequential(
-    nn.Linear(win_sz, win_sz),
+    nn.Linear(cfg.win_sz, cfg.hidden_sz),
     nn.Sigmoid(),
-    nn.Linear(win_sz, 1),
+    nn.Linear(cfg.hidden_sz, 1),
     nn.Sigmoid()
 )
 
 loss = nn.MSELoss()
-opt = Adam(model.parameters(), lr=lr)
+opt = Adam(model.parameters(), lr=cfg.lr)
 model.train()
 
-utl.train(
+trn_ls, vld_ls, bst_state = utl.train(
     mdl=model,
     train_dataloader=trn_dl,
     valid_dataloader=vld_dl,
-    n_epoch=n_epoch,
+    n_epoch=cfg.n_epoch,
     opt=opt,
     loss=loss,
-    valid_step=100,
+    valid_step=cfg.vld_step,
     save_path='')
+
+y_act = []
+y_pred = []
 
 model.eval()
 with torch.inference_mode():
-    y = model(torch.tensor(x.astype('float32')))
+    for i, (inp, out) in enumerate(tst_dl):
+        y = out.numpy().reshape((1, -1))[0].tolist()
+        y_act.extend(y)
 
+        y = model(inp)
+        y = y.numpy().reshape(1, -1)[0].tolist()
+        y_pred.extend(y)
+
+plt.plot(y_act)
+plt.plot(y_pred)
 plt.legend(['actual', 'predicted'])
-plt.plot(y.numpy())
+plt.title('actual vs predicted values')
+plt.show()
+
+plt.plot(trn_ls)
+plt.plot(vld_ls)
+plt.legend(['train loss', 'validation loss'])
+plt.title('training procedure')
 plt.show()
