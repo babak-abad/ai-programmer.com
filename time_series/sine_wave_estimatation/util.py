@@ -6,9 +6,10 @@ from torch import nn
 from torch.optim import Adam, SGD
 from matplotlib import pyplot as plt
 
+
 def create_dataloader(x, y, batch_sz, shuffle):
     tensor_x = torch.Tensor(x)  # transform to torch tensor
-    tensor_y = torch.Tensor(y)
+    tensor_y = torch.Tensor(y.reshape((-1, 1)))
 
     dataset = TensorDataset(tensor_x, tensor_y)  # create your datset
     dataloader = DataLoader(
@@ -103,6 +104,7 @@ def normalize(data, rng=(0, 1)):
 #     x = np.array(x)
 #     y = np.array(y).reshape(-1, 1)
 #     return x, y
+
 
 def slide(seq, win_sz, hope):
     x = []
