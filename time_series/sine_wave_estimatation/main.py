@@ -55,6 +55,7 @@ trn_ls, vld_ls, bst_state = utl.train(
 y_act = []
 y_pred = []
 
+model.state_dict(bst_state)
 model.eval()
 with torch.inference_mode():
     for i, (inp, out) in enumerate(tst_dl):

@@ -61,14 +61,14 @@ def train(
 
         vld_losses.append(valid_loss)
 
-        if valid_loss < min_valid_loss and save_path != '':
-            p = save_path.format(
-                en=n_epoch,
-                vl=valid_loss,
-                tl=train_loss)
-            torch.save(mdl, p)
-
+        if valid_loss < min_valid_loss:
             best_state = mdl.state_dict()
+            if save_path != '':
+                p = save_path.format(
+                    en=n_epoch,
+                    vl=valid_loss,
+                    tl=train_loss)
+                torch.save(mdl, p)
 
         print('epoch: ' + str(e + 1))
         print('train loss: ' + str(train_loss / len(train_dataloader)))
