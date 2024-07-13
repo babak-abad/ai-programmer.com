@@ -1,3 +1,4 @@
 
 /time_series/sine_wave_estimatation/.idea
 time_series/sine_wave_estimatation/__pycache__/util.cpython-310.pyc
+*.pyc
