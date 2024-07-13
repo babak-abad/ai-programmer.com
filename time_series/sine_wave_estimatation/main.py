@@ -9,7 +9,6 @@ import configs as cfg
 data = [cfg.step_x*x for x in range(0, int(10*np.pi/cfg.step_x))]
 
 data = (np.sin(data) + 1)/2.0
-x, y = utl.slide(data, cfg.win_sz, cfg.hope)
 
 trn_sz = int(len(data) * cfg.trn_sz)
 vld_sz = int(len(data) * cfg.vld_sz)
@@ -19,20 +18,20 @@ vld_data = data[trn_sz: trn_sz+vld_sz]
 tst_data = data[trn_sz+vld_sz:]
 
 trn_dl = utl.create_dataloader(
-    *utl.slide(trn_data, cfg.win_sz, cfg.hope),
+    *utl.slide(trn_data, cfg.look_back, cfg.hope),
     cfg.n_batch,
     True)
 vld_dl = utl.create_dataloader(
-    *utl.slide(data, cfg.win_sz, cfg.hope),
+    *utl.slide(data, cfg.look_back, cfg.hope),
     cfg.n_batch,
     True)
 tst_dl = utl.create_dataloader(
-    *utl.slide(data, cfg.win_sz, cfg.hope),
+    *utl.slide(data, cfg.look_back, cfg.hope),
     cfg.n_batch,
     False)
 
 model = nn.Sequential(
-    nn.Linear(cfg.win_sz, cfg.hidden_sz),
+    nn.Linear(cfg.look_back, cfg.hidden_sz),
     nn.Sigmoid(),
     nn.Linear(cfg.hidden_sz, 1),
     nn.Sigmoid()
@@ -42,7 +41,7 @@ loss = nn.MSELoss()
 opt = Adam(model.parameters(), lr=cfg.lr)
 model.train()
 
-trn_ls, vld_ls, bst_state = utl.train(
+trn_ls, vld_ls, best_state = utl.train(
     mdl=model,
     train_dataloader=trn_dl,
     valid_dataloader=vld_dl,
@@ -55,7 +54,7 @@ trn_ls, vld_ls, bst_state = utl.train(
 y_act = []
 y_pred = []
 
-model.state_dict(bst_state)
+model.state_dict(best_state)
 model.eval()
 with torch.inference_mode():
     for i, (inp, out) in enumerate(tst_dl):

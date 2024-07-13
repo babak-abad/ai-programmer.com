@@ -1,17 +1,34 @@
-from torch.utils.data import DataLoader, Dataset, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset
 import torch
 import numpy as np
 
 
-def create_dataloader(x, y, batch_sz, shuffle):
-    tensor_x = torch.Tensor(x)  # transform to torch tensor
-    tensor_y = torch.Tensor(y.reshape((-1, 1)))
+def slide(seq, look_back, hope):
+    x = []
+    y = []
 
-    dataset = TensorDataset(tensor_x, tensor_y)  # create your datset
+    i = 0
+    while i < len(seq) - look_back:
+        x.append(seq[i:i + look_back])
+        y.append([seq[i + look_back]])
+        i += hope
+
+    x = np.array(x)
+    y = np.array(y)
+
+    return x, y
+
+
+def create_dataloader(x, y, batch_sz, shuffle):
+    tensor_x = torch.Tensor(x)
+    tensor_y = torch.Tensor(y)
+
+    dataset = TensorDataset(tensor_x, tensor_y)
     dataloader = DataLoader(
         dataset,
         batch_size=batch_sz,
-        shuffle=shuffle)  # create your dataloader
+        shuffle=shuffle)
+
     return dataloader
 
 
@@ -78,17 +95,3 @@ def train(
     return trn_losses, vld_losses, best_state
 
 
-def slide(seq, win_sz, hope):
-    x = []
-    y = []
-
-    i = 0
-    while i < len(seq) - win_sz:
-        x.append(seq[i:i+win_sz])
-        y.append(seq[i+win_sz])
-        i += hope
-
-    x = np.array(x)
-    y = np.array(y)
-
-    return x, y
